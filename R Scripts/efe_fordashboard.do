@@ -28,7 +28,7 @@ rename *, lower
 
 * keep interested vars 
 * note: all the "proxy" vars seem to be dummy versions of the y/n vars
-keep contactid currently_working_proxy same_employer_proxy position_type efe_training_relevance_to_sector gender nationality beneficiaryspecialization levelofeducation numberdaysretainedjob pl_* mainobstacletosecurejob motivationfortraining received_prior_profskills_train retention_6_months retention_3_months retention_9_months retention_12_months countryofprogramming emp_stat_type survey_created_date //months_job 
+keep contactid currently_working_proxy same_employer_proxy position_type efe_training_relevance_to_sector gender nationality beneficiaryspecialization levelofeducation numberdaysretainedjob pl_* mainobstacletosecurejob motivationfortraining received_prior_profskills_train retention_6_months retention_3_months retention_9_months retention_12_months countryofprogramming emp_stat_type survey_created_date first_industry_employment //months_job 
 
 drop pl_*_data
 
@@ -119,4 +119,32 @@ drop position_type
 
 order contactid country gender order n date emp_stat_type retention_days working same_employer position retention_* 
 
-export excel "C:/Users/wb576985/Downloads/efe_tableau.xlsx", replace
+foreach var in educ beneficiaryspecialization main_obstacle pre_train_skills efe_reason gender {
+	preserve 
+	
+	keep contactid country n date emp_stat_type retention_days working same_employer position retention_6 retention_3 retention_9 retention_12 retention_months prev_working prev_emp_stat_type prev_position prev_efe_relevance survey_created_date efe_relevance first_industry_employment gender `var'
+	
+	
+	rename `var' subgroup
+	tostring subgroup, replace
+	
+	gen label = "`var'"
+	
+	if "`var'" == "educ" { 
+		tempfile temp
+		save `temp', replace
+	}
+	else {
+		append using `temp'
+		save `temp', replace
+	}
+	
+	restore
+	
+}
+
+	use `temp', clear
+	
+	replace gender = subgroup if gender == ""
+e
+export excel "C:/Users/wb576985/Downloads/efe_tableau.xlsx", replace firstrow(variables)
